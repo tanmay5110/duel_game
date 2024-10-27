@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Player Game - Mini-Games</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(270deg, #d67987, #FF69B4, lightblue);
+            background-size: 600% 600%;
+            animation: gradientAnimation 10s ease infinite;
+            text-align: center;
+            color: white;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background-color: rgba(255, 20, 147, 0.7);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            margin-top: 100px;
+        }
+
+        h1 {
+            color: #FFD700; /* Gold color */
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        input[type="text"], select {
+            padding: 10px;
+            width: calc(100% - 22px);
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border: 1px solid #FFD700; /* Gold color */
+            outline: none;
+        }
+
+        .choice {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #D5006D; /* Darker Deep pink */
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .choice:hover {
+            background-color: #FF69B4; /* Hot pink */
+            transform: scale(1.05);
+        }
+
+        .choice:active {
+            background-color: #B0004D; /* Even darker pink on click */
+            transform: scale(0.95);
+        }
+
+        .result, .task {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #FFD700; /* Gold color */
+        }
+
+        /* Game display */
+        #game-display {
+            display: none;
+            margin-top: 20px;
+            font-size: 22px;
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Tic Tac Toe Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .grid button {
+            padding: 20px;
+            font-size: 24px;
+            background-color: #FF69B4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .grid button:hover {
+            background-color: #FF1493;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="landing-page">
+        <h1>Enter Player Information</h1>
+        <div class="form-group">
+            <input type="text" id="player1Name" placeholder="Player 1 Name" required>
+            <select id="player1Gender">
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <input type="text" id="player2Name" placeholder="Player 2 Name" required>
+            <select id="player2Gender">
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+        </div>
+        <button onclick="startGame()" class="choice">Start Game</button>
+    </div>
+
+    <div class="container" id="difficulty-page" style="display: none;">
+        <h1>Select Difficulty</h1>
+        <button onclick="setDifficulty('easy')" class="choice">Easy</button>
+        <button onclick="setDifficulty('medium')" class="choice">Medium</button>
+        <button onclick="setDifficulty('hard')" class="choice">Hard</button>
+        <button onclick="setDifficulty('mixed')" class="choice">Mixed</button>
+    </div>
+
+    <div class="container" id="game-page" style="display: none;">
+        <h1>Choose a Mini-Game</h1>
+        <button onclick="startMiniGame('ticTacToe')" class="choice">Tic-Tac-Toe</button>
+        <button onclick="startMiniGame('rockPaperScissors')" class="choice">Rock-Paper-Scissors</button>
+        <div id="game-display"></div>
+    </div>
+
+    <script>
+        let player1Name = '';
+        let player1Gender = '';
+        let player2Name = '';
+        let player2Gender = '';
+        let difficulty = '';
+        let currentMiniGame = '';
+
+        // Predefined tasks
+        const tasks = {
+            easy: {
+                male: [
+                    "Do 5 push-ups!",
+                    "Dance for 30 seconds!",
+                    "Tell a joke!",
+                ],
+                female: [
+                    "Do 10 jumping jacks!",
+                    "Sing a nursery rhyme!",
+                    "Draw something silly!",
+                ],
+                both: [
+                    "Sing a song together!",
+                    "Do a silly dance together!",
+                    "Act like a famous character!"
+                ]
+            },
+            medium: {
+                male: [
+                    "Do 10 push-ups!",
+                    "Sing a song of your choice!",
+                    "Do a funny dance for 1 minute!",
+                ],
+                female: [
+                    "Do 15 squats!",
+                    "Sing a popular song!",
+                    "Imitate a famous character!",
+                ],
+                both: [
+                    "Do a funny skit together!",
+                    "Create a funny story together!",
+                    "Challenge each other to a quick rap battle!"
+                ]
+            },
+            hard: {
+                male: [
+                    "Do 20 push-ups!",
+                    "Do a plank for 1 minute!",
+                    "Run in place for 2 minutes!",
+                ],
+                female: [
+                    "Do 25 squats!",
+                    "Do a plank for 1 minute!",
+                    "Run in place for 2 minutes!",
+                ],
+                both: [
+                    "Hold a plank position together for 30 seconds!",
+                    "Do a 1-minute dance off!",
+                    "Challenge each other to a trivia question round!"
+                ]
+            },
+            mixed: {
+                male: [
+                    "Do 15 burpees!",
+                    "Sing a song of your choice loudly!",
+                    "Do a funny dance for 1 minute!",
+                ],
+                female: [
+                    "Do 20 lunges!",
+                    "Imitate a famous character for 1 minute!",
+                    "Do a funny dance for 1 minute!",
+                ],
+                both: [
+                    "Do a quick challenge of your choice!",
+                    "Create a funny limerick together!",
+                    "Do a quick art challenge!"
+                ]
+            }
+        };
+
+        function startGame() {
+            player1Name = document.getElementById('player1Name').value;
+            player1Gender = document.getElementById('player1Gender').value;
+            player2Name = document.getElementById('player2Name').value;
+            player2Gender = document.getElementById('player2Gender').value;
+
+            if (!player1Name || !player1Gender || !player2Name || !player2Gender) {
+                alert("Please enter names and select genders for both players.");
+                return;
+            }
+
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('difficulty-page').style.display = 'block';
+        }
+
+        function setDifficulty(level) {
+            difficulty = level;
+            document.getElementById('difficulty-page').style.display = 'none';
+            document.getElementById('game-page').style.display = 'block';
+        }
+
+        function startMiniGame(game) {
+            currentMiniGame = game;
+            const gameDisplay = document.getElementById('game-display');
+            gameDisplay.style.display = 'block';
+            gameDisplay.innerHTML = ''; // Clear previous game display
+            if (game === 'ticTacToe') {
+                startTicTacToe();
+            } else if (game === 'rockPaperScissors') {
+                startRockPaperScissors();
+            }
+        }
+
+        // Tic Tac Toe Logic
+        let board = Array(3).fill(null).map(() => Array(3).fill(null));
+        let currentPlayer = 'X';
+
+        function startTicTacToe() {
+            const gameDisplay = document.getElementById('game-display');
+            gameDisplay.innerHTML = `<h2>Tic-Tac-Toe</h2>
+                <div class="grid">
+                    <button onclick="makeMove(0, 0)"></button>
+                    <button onclick="makeMove(0, 1)"></button>
+                    <button onclick="makeMove(0, 2)"></button>
+                    <button onclick="makeMove(1, 0)"></button>
+                    <button onclick="makeMove(1, 1)"></button>
+                    <button onclick="makeMove(1, 2)"></button>
+                    <button onclick="makeMove(2, 0)"></button>
+                    <button onclick="makeMove(2, 1)"></button>
+                    <button onclick="makeMove(2, 2)"></button>
+                </div>
+                <div id="result" class="result"></div>
+                <div id="task" class="task"></div>
+            `;
+        }
+
+        function makeMove(row, col) {
+            if (board[row][col] || checkWinner()) return; // Prevent overwriting or playing after winner is found
+            board[row][col] = currentPlayer;
+            document.querySelectorAll('.grid button')[row * 3 + col].innerText = currentPlayer;
+
+            if (checkWinner()) {
+                const winner = currentPlayer === 'X' ? player1Name : player2Name;
+                document.getElementById('result').innerHTML = `${winner} wins!`;
+                assignTask(winner === player1Name ? player2Name : player1Name, winner === player1Name ? player1Gender : player2Gender);
+            } else if (board.flat().every(cell => cell)) {
+                document.getElementById('result').innerHTML = "It's a tie!";
+            } else {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X'; // Switch players
+            }
+        }
+
+        function checkWinner() {
+            // Check rows, columns, and diagonals for a winner
+            for (let i = 0; i < 3; i++) {
+                if (board[i][0] && board[i][0] === board[i][1] && board[i][0] === board[i][2]) return true; // Check rows
+                if (board[0][i] && board[0][i] === board[1][i] && board[0][i] === board[2][i]) return true; // Check columns
+            }
+            if (board[0][0] && board[0][0] === board[1][1] && board[0][0] === board[2][2]) return true; // Check diagonal
+            if (board[0][2] && board[0][2] === board[1][1] && board[0][2] === board[2][0]) return true; // Check diagonal
+            return false;
+        }
+
+        // Rock-Paper-Scissors Logic
+        let player1Choice = '';
+        let player2Choice = '';
+
+        function startRockPaperScissors() {
+            const gameDisplay = document.getElementById('game-display');
+            gameDisplay.innerHTML = `
+                <h2>Rock-Paper-Scissors</h2>
+                <div>
+                    <button class="choice" onclick="playerChoice('rock', 1)">Rock</button>
+                    <button class="choice" onclick="playerChoice('paper', 1)">Paper</button>
+                    <button class="choice" onclick="playerChoice('scissors', 1)">Scissors</button>
+                </div>
+                <div>
+                    <button class="choice" onclick="playerChoice('rock', 2)">Rock</button>
+                    <button class="choice" onclick="playerChoice('paper', 2)">Paper</button>
+                    <button class="choice" onclick="playerChoice('scissors', 2)">Scissors</button>
+                </div>
+                <div id="result" class="result"></div>
+                <div id="task" class="task"></div>
+            `;
+        }
+
+        function playerChoice(choice, player) {
+            if (player === 1) {
+                player1Choice = choice;
+            } else {
+                player2Choice = choice;
+            }
+
+            if (player1Choice && player2Choice) {
+                determineWinner();
+            }
+        }
+
+        function determineWinner() {
+            const resultDiv = document.getElementById('result');
+            const taskDiv = document.getElementById('task');
+            let winner = '';
+            let loser = '';
+
+            if (player1Choice === player2Choice) {
+                resultDiv.innerHTML = "It's a tie!";
+                taskDiv.innerHTML = '';
+            } else if (
+                (player1Choice === 'rock' && player2Choice === 'scissors') ||
+                (player1Choice === 'paper' && player2Choice === 'rock') ||
+                (player1Choice === 'scissors' && player2Choice === 'paper')
+            ) {
+                winner = player1Name;
+                loser = player2Name;
+            } else {
+                winner = player2Name;
+                loser = player1Name;
+            }
+
+            if (winner) {
+                resultDiv.innerHTML = `${winner} wins!`;
+                assignTask(loser, winner === player1Name ? player1Gender : player2Gender);
+            }
+
+            // Reset choices for the next round
+            player1Choice = '';
+            player2Choice = '';
+        }
+
+        function assignTask(loser, gender) {
+            const tasks = {
+                easy: {
+                    male: [
+                        "Do 5 push-ups!",
+                        "Dance for 30 seconds!",
+                        "Tell a joke!",
+                    ],
+                    female: [
+                        "Do 10 jumping jacks!",
+                        "Sing a nursery rhyme!",
+                        "Draw something silly!",
+                    ],
+                    both: [
+                        "Sing a song together!",
+                        "Do a silly dance together!",
+                        "Act like a famous character!"
+                    ]
+                },
+                medium: {
+                    male: [
+                        "Do 10 push-ups!",
+                        "Sing a song of your choice!",
+                        "Do a funny dance for 1 minute!",
+                    ],
+                    female: [
+                        "Do 15 squats!",
+                        "Sing a popular song!",
+                        "Imitate a famous character!",
+                    ],
+                    both: [
+                        "Do a funny skit together!",
+                        "Create a funny story together!",
+                        "Challenge each other to a quick rap battle!"
+                    ]
+                },
+                hard: {
+                    male: [
+                        "Do 20 push-ups!",
+                        "Do a plank for 1 minute!",
+                        "Run in place for 2 minutes!",
+                    ],
+                    female: [
+                        "Do 25 squats!",
+                        "Do a plank for 1 minute!",
+                        "Run in place for 2 minutes!",
+                    ],
+                    both: [
+                        "Hold a plank position together for 30 seconds!",
+                        "Do a 1-minute dance off!",
+                        "Challenge each other to a trivia question round!"
+                    ]
+                },
+                mixed: {
+                    male: [
+                        "Do 15 burpees!",
+                        "Sing a song of your choice loudly!",
+                        "Do a funny dance for 1 minute!",
+                    ],
+                    female: [
+                        "Do 20 lunges!",
+                        "Imitate a famous character for 1 minute!",
+                        "Do a funny dance for 1 minute!",
+                    ],
+                    both: [
+                        "Do a quick challenge of your choice!",
+                        "Create a funny limerick together!",
+                        "Do a quick art challenge!"
+                    ]
+                }
+            };
+
+            const taskCategory = tasks[difficulty];
+            const taskList = taskCategory[gender] || taskCategory.both;
+            const randomTask = taskList[Math.floor(Math.random() * taskList.length)];
+            document.getElementById('task').innerHTML = `${loser}, you have to: ${randomTask}`;
+            
+            // Add a button to start the punishment
+            document.getElementById('task').innerHTML += `<br><button class="choice" onclick="startPunishment('${randomTask}')">Start Punishment</button>`;
+        }
+
+        function startPunishment(task) {
+            const taskDiv = document.getElementById('task');
+            taskDiv.innerHTML += "<br>Starting punishment...";
+            // Get timer input from the user
+            let timer = prompt("Enter the duration for the punishment in seconds:", "5"); // Ask user for timer duration
+            timer = parseInt(timer) || 5; // Default to 5 seconds if input is invalid
+            const countdown = setInterval(() => {
+                if (timer > 0) {
+                    taskDiv.innerHTML = `${taskDiv.innerHTML} <br>${timer} seconds remaining...`;
+                    timer--;
+                } else {
+                    clearInterval(countdown);
+                    taskDiv.innerHTML = `${taskDiv.innerHTML} <br>Punishment complete!`;
+                    // Allow the user to play again
+                    resetGame();
+                }
+            }, 1000);
+        }
+
+        function resetGame() {
+            // Reset the game state
+            board = Array(3).fill(null).map(() => Array(3).fill(null));
+            currentPlayer = 'X';
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('task').innerHTML = '';
+            document.getElementById('game-display').style.display = 'none';
+            // Allow the user to choose a mini-game again
+        }
+    </script>
+</body>
+</html>
